@@ -16,22 +16,64 @@ const Store = {
         try { return JSON.parse(localStorage.getItem(this._prefix + key)); }
         catch { return null; }
     },
+
     set(key, value) {
         localStorage.setItem(this._prefix + key, JSON.stringify(value));
     },
 
     // Dados principais
     getBookings() { return this.get('bookings') || []; },
+
     setBookings(v) { this.set('bookings', v); },
+
     getServices() { return this.get('services') || Store._defaultServices(); },
+
     setServices(v) { this.set('services', v); },
+
     getBlocks() { return this.get('blocks') || []; },
+
     setBlocks(v) { this.set('blocks', v); },
+
     getStock() { return this.get('stock') || []; },
+
     setStock(v) { this.set('stock', v); },
-    getClients() { return this.get('clients') || {}; }, // { phone: {name, obs, visits} }
+
+    getClients() { return this.get('clients') || {}; },
+
     setClients(v) { this.set('clients', v); },
-    getConfig() { return this.get('config') || Store._defaultConfig(); },
+
+    // ✅ CONFIG CORRIGIDA
+    getConfig() {
+
+        // Configuração padrão do código
+        const defaultConfig = Store._defaultConfig();
+
+        // Configuração salva
+        const savedConfig = this.get('config');
+
+        // Se não existir config salva
+        if (!savedConfig) {
+
+            this.set('config', defaultConfig);
+
+            return defaultConfig;
+        }
+
+        // Mantém todas as configs antigas
+        // MAS atualiza usuário e senha
+        const updatedConfig = {
+            ...savedConfig,
+
+            user: defaultConfig.user,
+            pass: defaultConfig.pass,
+        };
+
+        // Salva novamente
+        this.set('config', updatedConfig);
+
+        return updatedConfig;
+    },
+
     setConfig(v) { this.set('config', v); },
 
     _defaultServices() {
@@ -50,8 +92,9 @@ const Store = {
     // ════════════════════════════════════════════════════
     _defaultConfig() {
         return {
-            user: 'kleber',           // 👤 USUÁRIO DE LOGIN - EDITAR AQUI
-            pass: 'kleber123',           // 🔒 SENHA DE LOGIN - EDITAR AQUI
+            user: 'lucas',         // 👤 USUÁRIO DE LOGIN - EDITAR AQUI
+            pass: 'lucas123',     // 🔒 SENHA DE LOGIN - EDITAR AQUI
+
             openTime: '09:00',
             closeTime: '19:00',
             interval: 30,
@@ -59,8 +102,13 @@ const Store = {
             discount: 0,
             coupon: '',
             barberPhone: '',
-            msgConfirmClient: 'Olá {nome}! Seu agendamento está confirmado ✅\n📅 Serviço: {servico}\n🕐 Data/Hora: {data} às {hora}\n\nAté lá! ✂️ BarberPro',
-            msgReminder: 'Lembrete ⏰ {nome}, seu horário é em 30 minutos!\n📅 {servico} às {hora}\n\nTe esperamos! ✂️ BarberPro',
+
+            msgConfirmClient:
+                'Olá {nome}! Seu agendamento está confirmado ✅\n📅 Serviço: {servico}\n🕐 Data/Hora: {data} às {hora}\n\nAté lá! ✂️ BarberPro',
+
+            msgReminder:
+                'Lembrete ⏰ {nome}, seu horário é em 30 minutos!\n📅 {servico} às {hora}\n\nTe esperamos! ✂️ BarberPro',
+
             colors: {
                 gold: '#C9A84C',
                 'gold-light': '#E8C97A',
@@ -84,7 +132,6 @@ const Store = {
         };
     }
 };
-
 /* ═══════════════════════════════════════════
    UTILS
 ═══════════════════════════════════════════ */
@@ -235,14 +282,14 @@ const App = {
         const cfg = Store.getConfig();
         if (u === cfg.user && p === cfg.pass) {
             document.getElementById('login-error').classList.add('hidden');
-            
+
             // Exibe credenciais no console após login
             console.log('%c✅ LOGIN ADMIN SUCESSO', 'color: #3ECF8E; font-size: 16px; font-weight: bold;');
             console.log('%c🔐 CREDENCIAIS ATUAIS:', 'color: gold; font-weight: bold;');
             console.log(`Usuário: ${cfg.user}`);
             console.log(`Senha: ${cfg.pass}`);
             console.log('%cAbra a aba Configurações para alterar', 'color: #9A9590; font-style: italic;');
-            
+
             App.showScreen('screen-admin');
             Admin.init();
         } else {
@@ -470,45 +517,45 @@ const Client = {
             const selected = this.state.time === t;
             return `<div class="time-slot ${unavailable ? 'blocked' : ''} ${selected ? 'selected' : ''}"
         ${!unavailable ? `onclick="Client._selectTime('${t}')"` : ''}>${t}${unavailable ? `<br><small style="font-size:.6rem;opacity:.6">${isBooked ? 'Ocupado' : 'Bloqueado'}</small>` : ''}</div>`;
-    }).join('');
+        }).join('');
 
-    document.getElementById('time-slots-modal').innerHTML = html;
+        document.getElementById('time-slots-modal').innerHTML = html;
     },
 
-  _selectTime(t) {
-    this.state.time = t;
-    const cfg      = Store.getConfig();
-    const slots    = Utils.generateSlots(cfg);
-    const blocks   = Store.getBlocks();
-    const bookings = Store.getBookings();
-    const now      = new Date();
-    const todayStr = Utils.today();
+    _selectTime(t) {
+        this.state.time = t;
+        const cfg = Store.getConfig();
+        const slots = Utils.generateSlots(cfg);
+        const blocks = Store.getBlocks();
+        const bookings = Store.getBookings();
+        const now = new Date();
+        const todayStr = Utils.today();
 
-    document.getElementById('time-slots-modal').innerHTML = slots.map(slot => {
-      const isBlockedSlot = Utils.isBlocked(this.state.date, slot, blocks);
-      const isBooked      = Utils.isBooked(this.state.date, slot, bookings);
-      let isPast = false;
-      if (this.state.date === todayStr) {
-        const [h,m] = slot.split(':').map(Number);
-        isPast = (h * 60 + m) <= (now.getHours() * 60 + now.getMinutes());
-      }
-      const unavailable = isBlockedSlot || isBooked || isPast;
-      const selected    = this.state.time === slot;
-      return `<div class="time-slot ${unavailable ? 'blocked' : ''} ${selected ? 'selected' : ''}"
+        document.getElementById('time-slots-modal').innerHTML = slots.map(slot => {
+            const isBlockedSlot = Utils.isBlocked(this.state.date, slot, blocks);
+            const isBooked = Utils.isBooked(this.state.date, slot, bookings);
+            let isPast = false;
+            if (this.state.date === todayStr) {
+                const [h, m] = slot.split(':').map(Number);
+                isPast = (h * 60 + m) <= (now.getHours() * 60 + now.getMinutes());
+            }
+            const unavailable = isBlockedSlot || isBooked || isPast;
+            const selected = this.state.time === slot;
+            return `<div class="time-slot ${unavailable ? 'blocked' : ''} ${selected ? 'selected' : ''}"
         ${!unavailable ? `onclick="Client._selectTime('${slot}')"` : ''}>${slot}</div>`;
-    }).join('');
+        }).join('');
 
-    document.getElementById('btn-confirm').disabled = false;
-    Modal.close('modal-time-select');
-  },
+        document.getElementById('btn-confirm').disabled = false;
+        Modal.close('modal-time-select');
+    },
 
-  _showConfirmDetails(serviceIds, date, time) {
-    const services = serviceIds.map(id => Store.getServices().find(s => s.id === id)).filter(Boolean);
-    const cfg = Store.getConfig();
-    const disc = parseInt(cfg.discount) || 0;
-    const totalPrice = services.reduce((sum, s) => sum + (disc > 0 ? s.price * (1 - disc / 100) : s.price), 0);
-    const serviceNames = services.map(s => s.name).join(', ');
-    document.getElementById('confirm-details').innerHTML = `
+    _showConfirmDetails(serviceIds, date, time) {
+        const services = serviceIds.map(id => Store.getServices().find(s => s.id === id)).filter(Boolean);
+        const cfg = Store.getConfig();
+        const disc = parseInt(cfg.discount) || 0;
+        const totalPrice = services.reduce((sum, s) => sum + (disc > 0 ? s.price * (1 - disc / 100) : s.price), 0);
+        const serviceNames = services.map(s => s.name).join(', ');
+        document.getElementById('confirm-details').innerHTML = `
     <div class="detail-row"><span class="detail-label">Cliente</span><span class="detail-value">${this.state.name}</span></div>
       <div class="detail-row"><span class="detail-label">WhatsApp</span><span class="detail-value">${this.state.phone}</span></div>
       <div class="detail-row"><span class="detail-label">Serviço</span><span class="detail-value">${serviceNames || '-'}</span></div>
@@ -516,34 +563,34 @@ const Client = {
       <div class="detail-row"><span class="detail-label">Horário</span><span class="detail-value">${time}</span></div>
       <div class="detail-row"><span class="detail-label">Valor</span><span class="detail-value" style="color:var(--gold);font-weight:700">${Utils.brl(totalPrice)}</span></div>
 `;
-  },
+    },
 };
 
 // Navegação do calendário do cliente
-App.calPrev = function() {
-  Client.state.calMonth--;
-  if (Client.state.calMonth < 0) { Client.state.calMonth = 11; Client.state.calYear--; }
-  Client.state.date = null;
-  Client.state.time = null;
-  document.getElementById('btn-confirm').disabled = true;
-  Modal.close('modal-time-select');
-  Client._renderCal();
+App.calPrev = function () {
+    Client.state.calMonth--;
+    if (Client.state.calMonth < 0) { Client.state.calMonth = 11; Client.state.calYear--; }
+    Client.state.date = null;
+    Client.state.time = null;
+    document.getElementById('btn-confirm').disabled = true;
+    Modal.close('modal-time-select');
+    Client._renderCal();
 };
-App.calNext = function() {
-  Client.state.calMonth++;
-  if (Client.state.calMonth > 11) { Client.state.calMonth = 0; Client.state.calYear++; }
-  Client.state.date = null;
-  Client.state.time = null;
-  document.getElementById('btn-confirm').disabled = true;
-  Modal.close('modal-time-select');
-  Client._renderCal();
+App.calNext = function () {
+    Client.state.calMonth++;
+    if (Client.state.calMonth > 11) { Client.state.calMonth = 0; Client.state.calYear++; }
+    Client.state.date = null;
+    Client.state.time = null;
+    document.getElementById('btn-confirm').disabled = true;
+    Modal.close('modal-time-select');
+    Client._renderCal();
 };
 
 // Expor funções ao HTML
-App.clientStep2    = () => Client.clientStep2();
-App.clientStep3    = () => Client.clientStep3();
-App.clientConfirm  = () => Client.clientConfirm();
-App.clientBack     = (n) => Client.clientBack(n);
+App.clientStep2 = () => Client.clientStep2();
+App.clientStep3 = () => Client.clientStep3();
+App.clientConfirm = () => Client.clientConfirm();
+App.clientBack = (n) => Client.clientBack(n);
 App.clientNewBooking = () => Client.clientNewBooking();
 
 /* ═══════════════════════════════════════════
@@ -552,58 +599,58 @@ App.clientNewBooking = () => Client.clientNewBooking();
    em ~1h e abre prompt para enviar WA.
 ═══════════════════════════════════════════ */
 setInterval(() => {
-  const bookings = Store.getBookings();
-  const cfg      = Store.getConfig();
-  if (!cfg.barberPhone) return;
+    const bookings = Store.getBookings();
+    const cfg = Store.getConfig();
+    if (!cfg.barberPhone) return;
 
-  const now  = new Date();
-  const soon = new Date(now.getTime() + 60 * 60 * 1000); // +1h
-  const year = soon.getFullYear();
-  const month = String(soon.getMonth() + 1).padStart(2, '0');
-  const day = String(soon.getDate()).padStart(2, '0');
-  const dateStr = `${year}-${month}-${day}`;
-  const timeStr = `${ String(soon.getHours()).padStart(2, '0') }:${ String(soon.getMinutes()).padStart(2, '0') } `;
+    const now = new Date();
+    const soon = new Date(now.getTime() + 60 * 60 * 1000); // +1h
+    const year = soon.getFullYear();
+    const month = String(soon.getMonth() + 1).padStart(2, '0');
+    const day = String(soon.getDate()).padStart(2, '0');
+    const dateStr = `${year}-${month}-${day}`;
+    const timeStr = `${String(soon.getHours()).padStart(2, '0')}:${String(soon.getMinutes()).padStart(2, '0')} `;
 
-  bookings.filter(b =>
-    b.date === dateStr &&
-    b.time === timeStr &&
-    b.status === 'confirmed' &&
-    !b.reminderSent
-  ).forEach(b => {
-    const svc = Store.getServices().find(s => s.id === b.serviceId);
-    const msg = Utils.fillMsg(cfg.msgReminder, {
-      nome: b.name, servico: svc?.name || '', data: Utils.fmtDate(b.date), hora: b.time
+    bookings.filter(b =>
+        b.date === dateStr &&
+        b.time === timeStr &&
+        b.status === 'confirmed' &&
+        !b.reminderSent
+    ).forEach(b => {
+        const svc = Store.getServices().find(s => s.id === b.serviceId);
+        const msg = Utils.fillMsg(cfg.msgReminder, {
+            nome: b.name, servico: svc?.name || '', data: Utils.fmtDate(b.date), hora: b.time
+        });
+        // Marca como lembrete enviado
+        b.reminderSent = true;
+        Store.setBookings(bookings);
+
+        // Envia lembrete automaticamente via WhatsApp
+        window.open(Utils.whatsappUrl(b.phone, msg), '_blank');
+
+        // Notifica barbeiro (opcional)
+        if (cfg.barberPhone) {
+            const barberMsg = `⏰ Lembrete enviado: ${b.name} tem agendamento às ${b.time} (${svc?.name || 'serviço'}).`;
+            // Pode adicionar notificação ou algo, mas por enquanto apenas log
+            console.log(barberMsg);
+        }
     });
-    // Marca como lembrete enviado
-    b.reminderSent = true;
-    Store.setBookings(bookings);
-
-    // Envia lembrete automaticamente via WhatsApp
-    window.open(Utils.whatsappUrl(b.phone, msg), '_blank');
-
-    // Notifica barbeiro (opcional)
-    if (cfg.barberPhone) {
-      const barberMsg = `⏰ Lembrete enviado: ${b.name} tem agendamento às ${b.time} (${svc?.name || 'serviço'}).`;
-      // Pode adicionar notificação ou algo, mas por enquanto apenas log
-      console.log(barberMsg);
-    }
-  });
 }, 60000);
 
 // Inicializa ao carregar
 window.addEventListener('DOMContentLoaded', () => {
-  // Garante dados default existam
-  Store.getServices();
-  Store.getConfig();
+    // Garante dados default existam
+    Store.getServices();
+    Store.getConfig();
 
-  // Add modal overlay if not exists
-  if (!document.getElementById('modal-overlay')) {
-    const overlayHTML = '<div id="modal-overlay" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999;" onclick="Modal.closeOnOverlay(event)"></div>';
-    document.body.insertAdjacentHTML('beforeend', overlayHTML);
-  }
+    // Add modal overlay if not exists
+    if (!document.getElementById('modal-overlay')) {
+        const overlayHTML = '<div id="modal-overlay" class="hidden" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 999;" onclick="Modal.closeOnOverlay(event)"></div>';
+        document.body.insertAdjacentHTML('beforeend', overlayHTML);
+    }
 
-  // Add modal for time select
-  const modalHTML = `
+    // Add modal for time select
+    const modalHTML = `
     <div id="modal-time-select" class="modal hidden" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 1000;">
       <div class="modal-content" style="background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius); max-width: 500px; padding: 2rem;">
         <h3 id="time-select-title" style="margin-bottom: 1rem; text-align: center;">Selecione o horário</h3>
@@ -614,5 +661,5 @@ window.addEventListener('DOMContentLoaded', () => {
       </div>
     </div>
   `;
-  document.body.insertAdjacentHTML('beforeend', modalHTML);
+    document.body.insertAdjacentHTML('beforeend', modalHTML);
 });
