@@ -44,11 +44,14 @@ const Store = {
             { id: 's6', name: 'Hidratação', price: 45, duration: 40, icon: '💧', desc: 'Tratamento hidratante capilar', active: true },
         ];
     },
-// senha login 
+
+    // ════════════════════════════════════════════════════
+    // 🔐 EDITAR CREDENCIAIS DE ADMIN AQUI:
+    // ════════════════════════════════════════════════════
     _defaultConfig() {
         return {
-            user: 'admin',
-            pass: 'admin123',
+            user: 'lucas',           // 👤 USUÁRIO DE LOGIN - EDITAR AQUI
+            pass: 'lucas123',           // 🔒 SENHA DE LOGIN - EDITAR AQUI
             openTime: '09:00',
             closeTime: '19:00',
             interval: 30,

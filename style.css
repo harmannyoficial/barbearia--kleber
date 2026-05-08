@@ -524,6 +524,12 @@ a { color: var(--gold); text-decoration: none; }
   appearance: none;
   -webkit-appearance: none;
 }
+.form-group input::placeholder,
+.form-group input::-webkit-input-placeholder,
+.form-group input::-moz-placeholder,
+.form-group input:-ms-input-placeholder {
+  color: #cccccc;
+}
 .form-group input:focus, .form-group select:focus, .cfg-input:focus { outline: none; border-color: var(--gold); box-shadow: 0 0 0 2px rgba(201,168,76,0.1); }
 .form-group select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%239A9590' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 2rem; }
 .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
