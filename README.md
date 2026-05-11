@@ -52,11 +52,12 @@ O projeto foi pensado para funcionar tanto no computador quanto no celular, mant
 
 <p align="center">
  <img src="./img.jpg/Captura de tela 2026-05-10 205750.png" alt="">
-  <img src="./img.jpg/Captura de tela 2026-05-10 205846.png" alt="">
-  <img src="./img.jpg/Captura de tela 2026-05-10 205901.png alt=">
+ <img src="./img.jpg/Captura de tela 2026-05-10 205846.png" alt="">
+ <img src="./img.jpg/Captura de tela 2026-05-10 205901.png alt=">
+ <img src="./img.jpg/Captura de tela 2026-05-10 205901.png" width="800">
 </p>
 
-> Basta substituir as imagens dentro da pasta `/assets`.
+
 
 ---
 
