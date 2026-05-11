@@ -53,9 +53,7 @@ const Store = {
 
         // Se não existir config salva
         if (!savedConfig) {
-
             this.set('config', defaultConfig);
-
             return defaultConfig;
         }
 
@@ -66,6 +64,9 @@ const Store = {
 
             user: defaultConfig.user,
             pass: defaultConfig.pass,
+
+            // 🔥 garante que sessionVersion exista sempre
+            sessionVersion: savedConfig.sessionVersion || defaultConfig.sessionVersion,
         };
 
         // Salva novamente
@@ -94,6 +95,10 @@ const Store = {
         return {
             user: 'kleber',         // 👤 USUÁRIO DE LOGIN - EDITAR AQUI
             pass: 'kleber',     // 🔒 SENHA DE LOGIN - EDITAR AQUI
+
+            // 🔥 se você mudar isso manualmente no código,
+            // todo mundo perde acesso automaticamente
+            sessionVersion: 1,
 
             openTime: '09:00',
             closeTime: '19:00',
@@ -266,6 +271,55 @@ const Modal = {
    APP — navegação principal
 ═══════════════════════════════════════════ */
 const App = {
+
+    // ✅ Gera token com senha + sessionVersion
+    generateSessionToken(password, version) {
+        const hash = btoa(password + '|' + version);
+        return `session_${Date.now()}_${hash}`;
+    },
+
+    // ✅ valida token comparando com senha + sessionVersion atual
+    isSessionValid(token) {
+        if (!token || !token.startsWith('session_')) return false;
+
+        const parts = token.split('_');
+        if (parts.length !== 3) return false;
+
+        const hash = parts[2];
+
+        const cfg = Store.getConfig();
+        const currentHash = btoa(cfg.pass + '|' + (cfg.sessionVersion || 1));
+
+        return hash === currentHash;
+    },
+
+    // Salva sessão (em sessionStorage, expira ao fechar navegador)
+    saveSession(token) {
+        sessionStorage.setItem('barberpro_session', token);
+    },
+
+    // Carrega sessão
+    loadSession() {
+        return sessionStorage.getItem('barberpro_session');
+    },
+
+    // Remove sessão
+    clearSession() {
+        sessionStorage.removeItem('barberpro_session');
+    },
+
+    // Verifica sessão ao carregar página
+    checkSession() {
+        const token = this.loadSession();
+        if (token && this.isSessionValid(token)) {
+            this.showScreen('screen-admin');
+            Admin.init();
+        } else {
+            this.clearSession();
+            this.showScreen('screen-entry');
+        }
+    },
+
     // Mostra/esconde telas
     showScreen(id) {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
@@ -280,10 +334,14 @@ const App = {
         const u = document.getElementById('login-user').value.trim();
         const p = document.getElementById('login-pass').value;
         const cfg = Store.getConfig();
+
         if (u === cfg.user && p === cfg.pass) {
             document.getElementById('login-error').classList.add('hidden');
 
-            // Exibe credenciais no console após login
+            // 🔥 token agora usa senha + sessionVersion
+            const token = this.generateSessionToken(cfg.pass, cfg.sessionVersion || 1);
+            this.saveSession(token);
+
             console.log('%c✅ LOGIN ADMIN SUCESSO', 'color: #3ECF8E; font-size: 16px; font-weight: bold;');
             console.log('%c🔐 CREDENCIAIS ATUAIS:', 'color: gold; font-weight: bold;');
             console.log(`Usuário: ${cfg.user}`);
@@ -298,6 +356,7 @@ const App = {
     },
 
     logout() {
+        this.clearSession();
         App.showScreen('screen-entry');
         document.getElementById('login-pass').value = '';
     },
@@ -631,7 +690,6 @@ setInterval(() => {
         // Notifica barbeiro (opcional)
         if (cfg.barberPhone) {
             const barberMsg = `⏰ Lembrete enviado: ${b.name} tem agendamento às ${b.time} (${svc?.name || 'serviço'}).`;
-            // Pode adicionar notificação ou algo, mas por enquanto apenas log
             console.log(barberMsg);
         }
     });
@@ -639,6 +697,9 @@ setInterval(() => {
 
 // Inicializa ao carregar
 window.addEventListener('DOMContentLoaded', () => {
+    // Verifica sessão existente
+    App.checkSession();
+
     // Garante dados default existam
     Store.getServices();
     Store.getConfig();

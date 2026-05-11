@@ -904,13 +904,26 @@ const Admin = {
   saveCredentials() {
     const user = document.getElementById('cfg-user').value.trim();
     const pass = document.getElementById('cfg-pass').value;
-    if (!user) { Utils.toast('Informe o usuário.'); return; }
+
+    if (!user) {
+      Utils.toast('Informe o usuário.');
+      return;
+    }
+
     const cfg = Store.getConfig();
     cfg.user = user;
-    if (pass) cfg.pass = pass;
+
+    if (pass) {
+      cfg.pass = pass;
+
+      // 🔥 aumenta sessionVersion pra derrubar qualquer sessão antiga
+      cfg.sessionVersion = (cfg.sessionVersion || 1) + 1;
+    }
+
     Store.setConfig(cfg);
+
     document.getElementById('cfg-pass').value = '';
-    Utils.toast('Credenciais salvas!');
+    Utils.toast('Credenciais salvas! (Sessões antigas foram encerradas)');
   },
 
   saveHours() {
@@ -949,96 +962,96 @@ const Admin = {
   //exlui agendamento financeiro 
   deletePayment(id) {
 
-  const cfg = Store.getConfig();
+    const cfg = Store.getConfig();
 
-  // cria overlay (fundo escuro)
-  const overlay = document.createElement('div');
-  overlay.style.position = 'fixed';
-  overlay.style.top = '0';
-  overlay.style.left = '0';
-  overlay.style.width = '100%';
-  overlay.style.height = '100%';
-  overlay.style.background = 'rgba(0,0,0,0.6)';
-  overlay.style.display = 'flex';
-  overlay.style.alignItems = 'center';
-  overlay.style.justifyContent = 'center';
-  overlay.style.zIndex = '9999';
+    // cria overlay (fundo escuro)
+    const overlay = document.createElement('div');
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100%';
+    overlay.style.height = '100%';
+    overlay.style.background = 'rgba(0,0,0,0.6)';
+    overlay.style.display = 'flex';
+    overlay.style.alignItems = 'center';
+    overlay.style.justifyContent = 'center';
+    overlay.style.zIndex = '9999';
 
-  // caixa modal
-  const box = document.createElement('div');
-  box.style.background = '#111';
-  box.style.padding = '20px';
-  box.style.border = '1px solid #333';
-  box.style.borderRadius = '8px';
-  box.style.minWidth = '280px';
-  box.style.display = 'flex';
-  box.style.flexDirection = 'column';
-  box.style.gap = '10px';
+    // caixa modal
+    const box = document.createElement('div');
+    box.style.background = '#111';
+    box.style.padding = '20px';
+    box.style.border = '1px solid #333';
+    box.style.borderRadius = '8px';
+    box.style.minWidth = '280px';
+    box.style.display = 'flex';
+    box.style.flexDirection = 'column';
+    box.style.gap = '10px';
 
-  const input = document.createElement('input');
-  input.type = 'password';
-  input.placeholder = 'Digite a senha';
-  input.style.padding = '10px';
+    const input = document.createElement('input');
+    input.type = 'password';
+    input.placeholder = 'Digite a senha';
+    input.style.padding = '10px';
 
-  const btnOk = document.createElement('button');
-  btnOk.innerText = 'Confirmar';
-  btnOk.style.backgroundColor = '#035e1c';
+    const btnOk = document.createElement('button');
+    btnOk.innerText = 'Confirmar';
+    btnOk.style.backgroundColor = '#035e1c';
 
-  const btnCancel = document.createElement('button');
-  btnCancel.innerText = 'Cancelar';
-  btnCancel.style.backgroundColor = '#751010';
+    const btnCancel = document.createElement('button');
+    btnCancel.innerText = 'Cancelar';
+    btnCancel.style.backgroundColor = '#751010';
 
 
-  box.appendChild(input);
-  box.appendChild(btnOk);
-  box.appendChild(btnCancel);
-  overlay.appendChild(box);
-  document.body.appendChild(overlay);
+    box.appendChild(input);
+    box.appendChild(btnOk);
+    box.appendChild(btnCancel);
+    overlay.appendChild(box);
+    document.body.appendChild(overlay);
 
-  // 🔴 CLICAR FORA CANCELA
-  overlay.addEventListener('click', (e) => {
-    if (e.target === overlay) {
+    // 🔴 CLICAR FORA CANCELA
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) {
+        document.body.removeChild(overlay);
+      }
+    });
+
+    // botão cancelar
+    btnCancel.onclick = () => {
       document.body.removeChild(overlay);
-    }
-  });
+    };
 
-  // botão cancelar
-  btnCancel.onclick = () => {
-    document.body.removeChild(overlay);
-  };
+    // botão confirmar
+    btnOk.onclick = () => {
 
-  // botão confirmar
-  btnOk.onclick = () => {
+      const senha = input.value;
 
-    const senha = input.value;
+      if (senha !== cfg.pass) {
+        Utils.toast('Senha incorreta!');
+        document.body.removeChild(overlay);
+        return;
+      }
 
-    if (senha !== cfg.pass) {
-      Utils.toast('Senha incorreta!');
+      if (!confirm('Tem certeza que deseja excluir este pagamento?')) {
+        document.body.removeChild(overlay);
+        return;
+      }
+
+      let bookings = Store.getBookings();
+
+      bookings = bookings.filter(b => b.id !== id);
+
+      Store.setBookings(bookings);
+
+      Utils.toast('Pagamento excluído com sucesso!');
+
+      this.renderFinanceiro();
+
+      if (this._currentTab === 'dashboard') this.renderDashboard();
+      if (this._currentTab === 'agenda') this.renderAgenda();
+
       document.body.removeChild(overlay);
-      return;
-    }
-
-    if (!confirm('Tem certeza que deseja excluir este pagamento?')) {
-      document.body.removeChild(overlay);
-      return;
-    }
-
-    let bookings = Store.getBookings();
-
-    bookings = bookings.filter(b => b.id !== id);
-
-    Store.setBookings(bookings);
-
-    Utils.toast('Pagamento excluído com sucesso!');
-
-    this.renderFinanceiro();
-
-    if (this._currentTab === 'dashboard') this.renderDashboard();
-    if (this._currentTab === 'agenda') this.renderAgenda();
-
-    document.body.removeChild(overlay);
-  };
-},
+    };
+  },
 
   updateColor(key, value) {
     document.documentElement.style.setProperty('--' + key, value);
