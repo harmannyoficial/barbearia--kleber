@@ -36,7 +36,8 @@ O projeto foi pensado para funcionar tanto no computador quanto no celular, mant
 ## Dashboard
 
 <p align="center">
-  <img src="./assets/dashboard.png" width="800">
+  <img src="![Uploading image.png…]()
+">
 </p>
 
 ## Agenda
