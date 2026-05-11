@@ -77,6 +77,7 @@ O projeto foi pensado para funcionar tanto no computador quanto no celular, mant
 - Histórico de serviços
 - Controle de frequência
 - Informações salvas no navegador
+- Nâo compartilhavel entre computador e celular 
 
 ## 💰 Financeiro
 
@@ -85,19 +86,12 @@ O projeto foi pensado para funcionar tanto no computador quanto no celular, mant
 - Relatórios simples
 - Painel administrativo
 
-## 👨‍💼 Funcionários
-
-- Cadastro de barbeiros
-- Controle individual
-- Comissão e vendas
-- Permissões administrativas
-
 ## 📱 Responsividade
 
 - Compatível com celular
 - Interface adaptável
 - Navegação otimizada
-
+- Nâo compartilhavel entre computador e celular 
 ---
 
 # 🧰 Tecnologias Utilizadas
@@ -116,97 +110,15 @@ O projeto foi pensado para funcionar tanto no computador quanto no celular, mant
 
 ---
 
-# 📁 Estrutura do Projeto
-
-```bash
-BarberPro/
-│
-├── index.html
-├── README.md
-│
-├── css/
-│   └── style.css
-│
-├── js/
-│   └── app.js
-│
-├── assets/
-│   ├── dashboard.png
-│   ├── agenda.png
-│   ├── clientes.png
-│   └── logo.png
-│
-└── icons/
-    └── favicon.ico
-```
-
----
-
-# 🚀 Como Executar
-
-## 1. Clone o projeto
-
-```bash
-git clone https://github.com/seuusuario/barberpro.git
-```
-
-## 2. Abra a pasta
-
-```bash
-cd barberpro
-```
-
-## 3. Execute o projeto
-
-Basta abrir o arquivo:
-
-```bash
-index.html
-```
-
----
-
-# 🎨 Design do Sistema
-
-O sistema segue um padrão visual:
-
-- Minimalista
-- Moderno
-- Escuro elegante
-- Componentes organizados
-- Fácil manutenção
-
----
-
-# 🔒 Segurança
-
-- Dados armazenados localmente
-- Controle de permissões
-- Área administrativa protegida
-- Estrutura preparada para backend futuro
-
----
-
-# 📌 Próximas Atualizações
-
-- [ ] Login com autenticação
-- [ ] Banco de dados online
-- [ ] Integração com WhatsApp automática
-- [ ] Painel financeiro avançado
-- [ ] Multi-barbearias
-- [ ] Sistema de estoque
-
----
-
 # 👨‍💻 Desenvolvedor
 
-Desenvolvido por **Harmanny Barbershop**
+Desenvolvido por **Harmanny.oficial**
 
 ---
 
 <div align="center">
 
 ### 💈 BarberPro
-Sistema profissional para barbearias modernas.
+Sistema profissional para barbearias modernas  ( micro empresa individual ).
 
 </div>
