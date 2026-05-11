@@ -92,8 +92,8 @@ const Store = {
     // ════════════════════════════════════════════════════
     _defaultConfig() {
         return {
-            user: 'lucas',         // 👤 USUÁRIO DE LOGIN - EDITAR AQUI
-            pass: 'lucas123',     // 🔒 SENHA DE LOGIN - EDITAR AQUI
+            user: 'kleber',         // 👤 USUÁRIO DE LOGIN - EDITAR AQUI
+            pass: 'kleber',     // 🔒 SENHA DE LOGIN - EDITAR AQUI
 
             openTime: '09:00',
             closeTime: '19:00',
