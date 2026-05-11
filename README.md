@@ -36,14 +36,14 @@ O projeto foi pensado para funcionar tanto no computador quanto no celular, mant
 ## Dashboard
 
 <p align="center">
-  <img src="![Uploading image.png…]()
+  <img src="./assets/agenda.png" width="800">
 ">
 </p>
 
 ## Agenda
 
 <p align="center">
-  <img src="./assets/agenda.png" width="800">
+ <img src="./img.jpg/Captura de tela 2026-05-10 205622.png" alt="">
 </p>
 
 ## Área do Cliente
