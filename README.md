@@ -36,11 +36,13 @@ O projeto foi pensado para funcionar tanto no computador quanto no celular, mant
 ## Dashboard
 
 <p align="center">
-  <img src="./assets/agenda.png" width="800">
+<img src="./img.jpg/Captura de tela 2026-05-10 205622.png" width="800">
+<img src="./img.jpg/Captura de tela 2026-05-10 205642.png" width="800">
+<img src="./img.jpg/Captura de tela 2026-05-10 205709.png" width="800">
 ">
 </p>
 
-## Agenda
+## Tela inicial
 
 <p align="center">
  <img src="./img.jpg/Captura de tela 2026-05-10 205622.png" alt="">
@@ -49,7 +51,9 @@ O projeto foi pensado para funcionar tanto no computador quanto no celular, mant
 ## Área do Cliente
 
 <p align="center">
-  <img src="./assets/clientes.png" width="800">
+ <img src="./img.jpg/Captura de tela 2026-05-10 205750.png" alt="">
+  <img src="./img.jpg/Captura de tela 2026-05-10 205846.png" alt="">
+  <img src="./img.jpg/Captura de tela 2026-05-10 205901.png alt=">
 </p>
 
 > Basta substituir as imagens dentro da pasta `/assets`.
