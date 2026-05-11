@@ -15,9 +15,9 @@ const Admin = {
   ═══════════════════════════════════════ */
   init() {
     const now = new Date();
-    this._adminCalYear  = now.getFullYear();
+    this._adminCalYear = now.getFullYear();
     this._adminCalMonth = now.getMonth();
-    this._selectedDay   = Utils.today();
+    this._selectedDay = Utils.today();
 
     this.tab('dashboard');
     this._loadConfig();
@@ -25,9 +25,9 @@ const Admin = {
     this._applyColors();
 
     // Atualiza data no dashboard
-    const months = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
-    const today  = new Date();
-    const daysN  = ['Domingo','Segunda','Terça','Quarta','Quinta','Sexta','Sábado'];
+    const months = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+    const today = new Date();
+    const daysN = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'];
     document.getElementById('current-date-label').textContent =
       `${daysN[today.getDay()]}, ${today.getDate()} de ${months[today.getMonth()]} de ${today.getFullYear()}`;
 
@@ -76,15 +76,15 @@ const Admin = {
     // Fecha sidebar mobile
     document.getElementById('sidebar').classList.remove('open');
     // Renderiza conteúdo
-    switch(name) {
-      case 'dashboard':  this.renderDashboard();  break;
-      case 'agenda':     this.renderAgenda();     break;
+    switch (name) {
+      case 'dashboard': this.renderDashboard(); break;
+      case 'agenda': this.renderAgenda(); break;
       case 'calendario': this.renderCalendario(); break;
-      case 'clientes':   this.renderClients();    break;
-      case 'servicos':   this.renderServices();   break;
-      case 'financeiro': this.renderFinanceiro();break;
-      case 'estoque':    this.renderStock();      break;
-      case 'bloqueios':  this.renderBlocks();     break;
+      case 'clientes': this.renderClients(); break;
+      case 'servicos': this.renderServices(); break;
+      case 'financeiro': this.renderFinanceiro(); break;
+      case 'estoque': this.renderStock(); break;
+      case 'bloqueios': this.renderBlocks(); break;
     }
   },
 
@@ -107,18 +107,18 @@ const Admin = {
   renderDashboard() {
     const bookings = Store.getBookings();
     const services = Store.getServices();
-    const today    = Utils.today();
-    const todayB   = bookings.filter(b => b.date === today && b.status !== 'cancelled');
+    const today = Utils.today();
+    const todayB = bookings.filter(b => b.date === today && b.status !== 'cancelled');
 
     // KPIs
-    const totalToday  = todayB.length;
-    const paidToday   = todayB.filter(b => b.payment === 'paid').length;
+    const totalToday = todayB.length;
+    const paidToday = todayB.filter(b => b.payment === 'paid').length;
     const revenueToday = todayB.filter(b => b.payment === 'paid').reduce((acc, b) => {
       const svc = services.find(s => s.id === b.serviceId);
       return acc + (svc ? svc.price : 0);
     }, 0);
-    const monthStart  = today.substr(0,7);
-    const monthB      = bookings.filter(b => b.date.startsWith(monthStart) && b.payment === 'paid');
+    const monthStart = today.substr(0, 7);
+    const monthB = bookings.filter(b => b.date.startsWith(monthStart) && b.payment === 'paid');
     const revenueMonth = monthB.reduce((acc, b) => {
       const svc = services.find(s => s.id === b.serviceId);
       return acc + (svc ? svc.price : 0);
@@ -137,7 +137,7 @@ const Admin = {
       todayList.innerHTML = '<div class="empty-state"><div class="empty-icon">📅</div>Nenhum agendamento hoje.</div>';
     } else {
       todayList.innerHTML = todayB
-        .sort((a,b) => a.time.localeCompare(b.time))
+        .sort((a, b) => a.time.localeCompare(b.time))
         .map(b => this._renderAppointmentCard(b, false)).join('');
     }
 
@@ -146,15 +146,15 @@ const Admin = {
     bookings.filter(b => b.status !== 'cancelled').forEach(b => {
       svcCount[b.serviceId] = (svcCount[b.serviceId] || 0) + 1;
     });
-    const sorted = Object.entries(svcCount).sort((a,b) => b[1]-a[1]).slice(0,5);
+    const sorted = Object.entries(svcCount).sort((a, b) => b[1] - a[1]).slice(0, 5);
     const max = sorted[0]?.[1] || 1;
     document.getElementById('top-services').innerHTML = sorted.length ?
       sorted.map(([id, cnt], i) => {
         const svc = services.find(s => s.id === id);
         return `<div class="top-service-item" onclick="Admin.tab('servicos')" style="cursor: pointer;">
-          <div class="top-svc-rank">${i+1}</div>
+          <div class="top-svc-rank">${i + 1}</div>
           <div class="top-svc-name">${svc?.icon || '✂'} ${svc?.name || 'Desconhecido'}</div>
-          <div class="top-svc-bar-wrap"><div class="top-svc-bar" style="width:${Math.round(cnt/max*100)}%"></div></div>
+          <div class="top-svc-bar-wrap"><div class="top-svc-bar" style="width:${Math.round(cnt / max * 100)}%"></div></div>
           <div class="top-svc-count">${cnt}x</div>
         </div>`;
       }).join('') :
@@ -171,7 +171,7 @@ const Admin = {
 
     // Renderizar agendamentos do dia atual
     const bookings = Store.getBookings().filter(b => b.date === today && b.status !== 'cancelled')
-      .sort((a,b) => a.time.localeCompare(b.time));
+      .sort((a, b) => a.time.localeCompare(b.time));
     const html = bookings.length ? bookings.map(b => this._renderAppointmentCard(b, true)).join('') : '<div class="empty-state"><div class="empty-icon">📅</div>Nenhum agendamento hoje.</div>';
     document.getElementById('today-appointments-list').innerHTML = html;
   },
@@ -188,34 +188,34 @@ const Admin = {
   },
 
   _renderAdminCal() {
-    const year  = this._adminCalYear;
+    const year = this._adminCalYear;
     const month = this._adminCalMonth;
-    const months = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+    const months = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
     document.getElementById('admin-cal-label').textContent = `${months[month]} ${year}`;
 
-    const cfg      = Store.getConfig();
-    const blocks   = Store.getBlocks();
+    const cfg = Store.getConfig();
+    const blocks = Store.getBlocks();
     const bookings = Store.getBookings();
-    const today    = Utils.today();
+    const today = Utils.today();
     const firstDay = new Date(year, month, 1).getDay();
-    const daysInMonth = new Date(year, month+1, 0).getDate();
-    const days = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const days = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
 
     let html = days.map(d => `<div class="cal-header">${d}</div>`).join('');
     for (let i = 0; i < firstDay; i++) html += '<div class="cal-day empty"></div>';
 
     for (let d = 1; d <= daysInMonth; d++) {
-      const ds = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const ds = `${year}-${String(month + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
       const dow = Utils.dayOfWeek(ds);
-      const isWorkDay  = cfg.workDays.includes(dow);
+      const isWorkDay = cfg.workDays.includes(dow);
       const isFullBlocked = blocks.some(b => b.date === ds && b.time === '');
-      const dayBookings   = bookings.filter(b => b.date === ds && b.status !== 'cancelled');
+      const dayBookings = bookings.filter(b => b.date === ds && b.status !== 'cancelled');
 
       let cls = 'cal-day';
-      if (ds === today)           cls += ' today';
+      if (ds === today) cls += ' today';
       if (ds === this._selectedDay) cls += ' selected';
       if (!isWorkDay || isFullBlocked) cls += ' disabled';
-      if (dayBookings.length)     cls += ' has-bookings';
+      if (dayBookings.length) cls += ' has-bookings';
 
       html += `<div class="${cls}" onclick="Admin._selectAdminDay('${ds}')">${d}${dayBookings.length ? `<span style="position:absolute;bottom:2px;right:3px;font-size:.55rem;color:var(--gold)">${dayBookings.length}</span>` : ''}</div>`;
     }
@@ -231,7 +231,7 @@ const Admin = {
   _openDayModal(ds) {
     const title = `Agendamentos — ${Utils.fmtDateLong(ds)}`;
     const bookings = Store.getBookings().filter(b => b.date === ds && b.status !== 'cancelled')
-      .sort((a,b) => a.time.localeCompare(b.time));
+      .sort((a, b) => a.time.localeCompare(b.time));
     const html = bookings.length ? bookings.map(b => this._renderAppointmentCard(b, true)).join('') : '<div class="empty-state"><div class="empty-icon">📅</div>Nenhum agendamento neste dia.</div>';
     document.getElementById('day-modal-title').textContent = title;
     document.getElementById('day-modal-content').innerHTML = html;
@@ -254,12 +254,12 @@ const Admin = {
   ═══════════════════════════════════════ */
   _renderAppointmentCard(b, showActions = true) {
     const services = Store.getServices();
-    const svc      = services.find(s => s.id === b.serviceId);
+    const svc = services.find(s => s.id === b.serviceId);
     const payBadge = b.payment === 'paid' ?
       '<span class="badge-paid">✓ Pago</span>' :
       b.payment === 'fiado' ?
-      '<span class="badge-fiado">💰 Fiado</span>' :
-      '<span class="badge-unpaid">❌ Não Pago</span>';
+        '<span class="badge-fiado">💰 Fiado</span>' :
+        '<span class="badge-unpaid">❌ Não Pago</span>';
     const payButtons = b.payment !== 'paid' ? `
       <button class="btn-sm pay" onclick="Admin.markPaid('${b.id}')">💰 Pago</button>
       <button class="btn-sm fiado" onclick="Admin.markFiado('${b.id}')">📝 Fiado</button>
@@ -301,12 +301,12 @@ const Admin = {
   openNewBooking() {
     document.getElementById('booking-edit-id').value = '';
     document.getElementById('modal-booking-title').textContent = 'Novo Agendamento';
-    document.getElementById('bk-name').value   = '';
-    document.getElementById('bk-phone').value  = '';
-    document.getElementById('bk-obs').value    = '';
+    document.getElementById('bk-name').value = '';
+    document.getElementById('bk-phone').value = '';
+    document.getElementById('bk-obs').value = '';
     document.getElementById('bk-payment').value = 'pending';
-    document.getElementById('bk-date').value   = Utils.today();
-    document.getElementById('bk-date').min     = Utils.today();
+    document.getElementById('bk-date').value = Utils.today();
+    document.getElementById('bk-date').min = Utils.today();
 
     // Preenche serviços
     const svcs = Store.getServices().filter(s => s.active);
@@ -327,11 +327,11 @@ const Admin = {
     if (!b) return;
     document.getElementById('booking-edit-id').value = id;
     document.getElementById('modal-booking-title').textContent = 'Editar Agendamento';
-    document.getElementById('bk-name').value    = b.name;
-    document.getElementById('bk-phone').value   = b.phone;
-    document.getElementById('bk-obs').value     = b.obs || '';
+    document.getElementById('bk-name').value = b.name;
+    document.getElementById('bk-phone').value = b.phone;
+    document.getElementById('bk-obs').value = b.obs || '';
     document.getElementById('bk-payment').value = b.payment;
-    document.getElementById('bk-date').value    = b.date;
+    document.getElementById('bk-date').value = b.date;
 
     const svcs = Store.getServices().filter(s => s.active);
     document.getElementById('bk-service').innerHTML = svcs.map(s =>
@@ -345,12 +345,12 @@ const Admin = {
   },
 
   _fillTimeSelect(date, excludeId, selectedTime = null) {
-    const cfg      = Store.getConfig();
-    const blocks   = Store.getBlocks();
+    const cfg = Store.getConfig();
+    const blocks = Store.getBlocks();
     const bookings = Store.getBookings();
-    const slots    = Utils.generateSlots(cfg);
-    const sel      = document.getElementById('bk-time');
-    sel.innerHTML  = slots.map(t => {
+    const slots = Utils.generateSlots(cfg);
+    const sel = document.getElementById('bk-time');
+    sel.innerHTML = slots.map(t => {
       const blocked = Utils.isBlocked(date, t, blocks) || Utils.isBooked(date, t, bookings, excludeId);
       return `<option value="${t}" ${blocked ? 'disabled' : ''} ${t === selectedTime ? 'selected' : ''}>${t}${blocked ? ' (ocupado)' : ''}</option>`;
     }).join('');
@@ -358,22 +358,22 @@ const Admin = {
   },
 
   saveBooking() {
-    const id   = document.getElementById('booking-edit-id').value;
+    const id = document.getElementById('booking-edit-id').value;
     const name = document.getElementById('bk-name').value.trim();
-    const phone= document.getElementById('bk-phone').value.trim();
-    const svcId= document.getElementById('bk-service').value;
+    const phone = document.getElementById('bk-phone').value.trim();
+    const svcId = document.getElementById('bk-service').value;
     const date = document.getElementById('bk-date').value;
     const time = document.getElementById('bk-time').value;
-    const pay  = document.getElementById('bk-payment').value;
-    const obs  = document.getElementById('bk-obs').value.trim();
+    const pay = document.getElementById('bk-payment').value;
+    const obs = document.getElementById('bk-obs').value.trim();
 
     if (!name || !phone || !svcId || !date || !time) {
       Utils.toast('Preencha todos os campos obrigatórios.'); return;
     }
 
     let bookings = Store.getBookings();
-    const cfg    = Store.getConfig();
-    const svc    = Store.getServices().find(s => s.id === svcId);
+    const cfg = Store.getConfig();
+    const svc = Store.getServices().find(s => s.id === svcId);
 
     if (id) {
       // Editar
@@ -386,7 +386,7 @@ const Admin = {
 
       // Atualiza cliente
       const clients = Store.getClients();
-      const key = phone.replace(/\D/g,'');
+      const key = phone.replace(/\D/g, '');
       if (!clients[key]) clients[key] = { name, phone, obs: '', visits: 0 };
       clients[key].visits = (clients[key].visits || 0) + 1;
       Store.setClients(clients);
@@ -450,7 +450,7 @@ const Admin = {
     b.obs = b.obs ? b.obs + ' | Falta de compromisso' : 'Falta de compromisso';
     // Marca no cliente
     const clients = Store.getClients();
-    const key = b.phone.replace(/\D/g,'');
+    const key = b.phone.replace(/\D/g, '');
     if (clients[key]) {
       clients[key].obs = (clients[key].obs || '') + (clients[key].obs ? ' | ' : '') + `Faltou em ${Utils.fmtDate(b.date)}`;
       Store.setClients(clients);
@@ -484,7 +484,7 @@ const Admin = {
   },
 
   _renderClientsTable(filter) {
-    const clients  = Store.getClients();
+    const clients = Store.getClients();
     const bookings = Store.getBookings();
     let rows = Object.values(clients);
     if (filter) rows = rows.filter(c => c.name.toLowerCase().includes(filter) || c.phone.includes(filter));
@@ -508,9 +508,9 @@ const Admin = {
       </thead>
       <tbody>
         ${rows.map(c => {
-          const key = c.phone.replace(/\D/g,'');
-          const lastB = bookings.filter(b => b.phone.replace(/\D/g,'') === key && b.status !== 'cancelled').sort((a,b) => (a.date+a.time).localeCompare(b.date+b.time)).pop();
-          return `<tr>
+      const key = c.phone.replace(/\D/g, '');
+      const lastB = bookings.filter(b => b.phone.replace(/\D/g, '') === key && b.status !== 'cancelled').sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time)).pop();
+      return `<tr>
             <td><strong>${c.name}</strong></td>
             <td><a href="https://wa.me/55${key}" target="_blank" style="color:var(--green)">📱 ${c.phone}</a></td>
             <td style="text-align:center">${c.visits || 0}</td>
@@ -520,7 +520,7 @@ const Admin = {
               <button class="btn-sm edit" onclick="Admin.openClientObs('${key}')">✏ Obs</button>
             </td>
           </tr>`;
-        }).join('')}
+    }).join('')}
       </tbody>
     </table>`;
     document.getElementById('clients-table-wrap').innerHTML = html;
@@ -536,8 +536,8 @@ const Admin = {
   },
 
   saveClientObs() {
-    const phone   = document.getElementById('obs-client-phone').value;
-    const obs     = document.getElementById('obs-text').value.trim();
+    const phone = document.getElementById('obs-client-phone').value;
+    const obs = document.getElementById('obs-text').value.trim();
     const clients = Store.getClients();
     if (clients[phone]) clients[phone].obs = obs;
     Store.setClients(clients);
@@ -582,18 +582,18 @@ const Admin = {
     if (id) {
       const s = Store.getServices().find(s => s.id === id);
       if (!s) return;
-      document.getElementById('svc-name').value     = s.name;
-      document.getElementById('svc-price').value    = s.price;
+      document.getElementById('svc-name').value = s.name;
+      document.getElementById('svc-price').value = s.price;
       document.getElementById('svc-duration').value = s.duration;
-      document.getElementById('svc-desc').value     = s.desc || '';
-      document.getElementById('svc-icon').value     = s.icon || '✂';
+      document.getElementById('svc-desc').value = s.desc || '';
+      document.getElementById('svc-icon').value = s.icon || '✂';
       document.getElementById('svc-active').checked = s.active;
     } else {
-      document.getElementById('svc-name').value     = '';
-      document.getElementById('svc-price').value    = '';
+      document.getElementById('svc-name').value = '';
+      document.getElementById('svc-price').value = '';
       document.getElementById('svc-duration').value = '30';
-      document.getElementById('svc-desc').value     = '';
-      document.getElementById('svc-icon').value     = '✂';
+      document.getElementById('svc-desc').value = '';
+      document.getElementById('svc-icon').value = '✂';
       document.getElementById('svc-active').checked = true;
     }
     Modal.open('modal-service');
@@ -601,13 +601,13 @@ const Admin = {
   },
 
   saveService() {
-    const id       = document.getElementById('svc-edit-id').value;
-    const name     = document.getElementById('svc-name').value.trim();
-    const price    = parseFloat(document.getElementById('svc-price').value);
+    const id = document.getElementById('svc-edit-id').value;
+    const name = document.getElementById('svc-name').value.trim();
+    const price = parseFloat(document.getElementById('svc-price').value);
     const duration = parseInt(document.getElementById('svc-duration').value);
-    const desc     = document.getElementById('svc-desc').value.trim();
-    const icon     = document.getElementById('svc-icon').value.trim() || '✂';
-    const active   = document.getElementById('svc-active').checked;
+    const desc = document.getElementById('svc-desc').value.trim();
+    const icon = document.getElementById('svc-icon').value.trim() || '✂';
+    const active = document.getElementById('svc-active').checked;
 
     if (!name || isNaN(price)) { Utils.toast('Preencha nome e preço.'); return; }
 
@@ -644,11 +644,11 @@ const Admin = {
      FINANCEIRO
   ═══════════════════════════════════════ */
   renderFinanceiro() {
-    const filter   = document.getElementById('fin-filter')?.value || 'month';
+    const filter = document.getElementById('fin-filter')?.value || 'month';
     const bookings = Store.getBookings();
     const services = Store.getServices();
-    const today    = Utils.today();
-    const now      = new Date();
+    const today = Utils.today();
+    const now = new Date();
 
     const filtered = bookings.filter(b => {
       if (b.payment !== 'paid') return false;
@@ -657,9 +657,9 @@ const Admin = {
         const start = new Date(now); start.setDate(now.getDate() - now.getDay());
         return new Date(b.date) >= start;
       }
-      if (filter === 'month') return b.date.startsWith(today.substr(0,7));
+      if (filter === 'month') return b.date.startsWith(today.substr(0, 7));
       return true;
-    }).sort((a,b) => (b.date+b.time).localeCompare(a.date+a.time));
+    }).sort((a, b) => (b.date + b.time).localeCompare(a.date + a.time));
 
     const total = filtered.reduce((acc, b) => {
       const s = services.find(s => s.id === b.serviceId);
@@ -668,7 +668,7 @@ const Admin = {
 
     const cfg = Store.getConfig();
     const discount = parseInt(cfg.discount) || 0;
-    const totalWithDisc = discount > 0 ? total * (1 - discount/100) : total;
+    const totalWithDisc = discount > 0 ? total * (1 - discount / 100) : total;
 
     document.getElementById('fin-kpi-grid').innerHTML = `
       <div class="kpi-card"><div class="kpi-icon">🧾</div><div class="kpi-value">${filtered.length}</div><div class="kpi-label">Pagamentos</div></div>
@@ -682,7 +682,7 @@ const Admin = {
     }
     document.getElementById('fin-history').innerHTML = filtered.map(b => {
       const svc = services.find(s => s.id === b.serviceId);
-      const price = discount > 0 ? (svc?.price || 0) * (1 - discount/100) : (svc?.price || 0);
+      const price = discount > 0 ? (svc?.price || 0) * (1 - discount / 100) : (svc?.price || 0);
       return `<div class="fin-row">
         <span class="fin-date">📅 ${Utils.fmtDate(b.date)} ${b.time}</span>
         <span>
@@ -690,8 +690,15 @@ const Admin = {
           <div class="fin-service">${svc?.icon || '✂'} ${svc?.name || '—'}</div>
         </span>
         <span class="fin-amount">${Utils.brl(price)}</span>
-        <button class="btn-sm whatsapp" onclick="Admin.sendWhatsApp('${b.id}')" style="margin-left:.5rem">📱</button>
-      </div>`;
+        <div style="display:flex;gap:.4rem;margin-left:.5rem">
+  <button class="btn-sm whatsapp" onclick="Admin.sendWhatsApp('${b.id}')">📱</button>
+
+  <button 
+    class="btn-sm delete"
+    onclick="Admin.deletePayment('${b.id}')">
+    🗑 Excluir
+  </button>
+</div>`;
     }).join('');
   },
 
@@ -728,14 +735,14 @@ const Admin = {
       const s = Store.getStock().find(s => s.id === id);
       if (!s) return;
       document.getElementById('stk-name').value = s.name;
-      document.getElementById('stk-qty').value  = s.qty;
-      document.getElementById('stk-min').value  = s.minQty;
+      document.getElementById('stk-qty').value = s.qty;
+      document.getElementById('stk-min').value = s.minQty;
       document.getElementById('stk-cost').value = s.cost;
       document.getElementById('stk-sell').value = s.sell;
     } else {
       document.getElementById('stk-name').value = '';
-      document.getElementById('stk-qty').value  = 1;
-      document.getElementById('stk-min').value  = 2;
+      document.getElementById('stk-qty').value = 1;
+      document.getElementById('stk-min').value = 2;
       document.getElementById('stk-cost').value = 0;
       document.getElementById('stk-sell').value = 0;
     }
@@ -743,9 +750,9 @@ const Admin = {
   },
 
   saveStock() {
-    const id   = document.getElementById('stk-edit-id').value;
+    const id = document.getElementById('stk-edit-id').value;
     const name = document.getElementById('stk-name').value.trim();
-    const qty  = parseInt(document.getElementById('stk-qty').value);
+    const qty = parseInt(document.getElementById('stk-qty').value);
     const minQty = parseInt(document.getElementById('stk-min').value);
     const cost = parseFloat(document.getElementById('stk-cost').value);
     const sell = parseFloat(document.getElementById('stk-sell').value);
@@ -791,7 +798,7 @@ const Admin = {
       return;
     }
     el.innerHTML = blocks
-      .sort((a,b) => (a.date+a.time).localeCompare(b.date+b.time))
+      .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time))
       .map(b => `<div class="block-item">
         <span class="block-date">📅 ${Utils.fmtDate(b.date)}</span>
         <span class="block-time">${b.time ? '🕐 ' + b.time : '🔒 Dia inteiro'}</span>
@@ -801,15 +808,15 @@ const Admin = {
   },
 
   openBlockModal() {
-    document.getElementById('blk-date').value   = Utils.today();
-    document.getElementById('blk-time').value   = '';
+    document.getElementById('blk-date').value = Utils.today();
+    document.getElementById('blk-time').value = '';
     document.getElementById('blk-reason').value = '';
     Modal.open('modal-block');
   },
 
   saveBlock() {
-    const date   = document.getElementById('blk-date').value;
-    const time   = document.getElementById('blk-time').value;
+    const date = document.getElementById('blk-date').value;
+    const time = document.getElementById('blk-time').value;
     const reason = document.getElementById('blk-reason').value.trim();
     if (!date) { Utils.toast('Selecione a data.'); return; }
     const blocks = Store.getBlocks();
@@ -833,15 +840,15 @@ const Admin = {
   ═══════════════════════════════════════ */
   _loadConfig() {
     const cfg = Store.getConfig();
-    document.getElementById('cfg-user').value       = cfg.user;
-    document.getElementById('cfg-open').value       = cfg.openTime;
-    document.getElementById('cfg-close').value      = cfg.closeTime;
-    document.getElementById('cfg-interval').value   = cfg.interval;
-    document.getElementById('cfg-discount').value   = cfg.discount || 0;
-    document.getElementById('cfg-coupon').value     = cfg.coupon || '';
+    document.getElementById('cfg-user').value = cfg.user;
+    document.getElementById('cfg-open').value = cfg.openTime;
+    document.getElementById('cfg-close').value = cfg.closeTime;
+    document.getElementById('cfg-interval').value = cfg.interval;
+    document.getElementById('cfg-discount').value = cfg.discount || 0;
+    document.getElementById('cfg-coupon').value = cfg.coupon || '';
     document.getElementById('cfg-barber-phone').value = cfg.barberPhone || '';
     document.getElementById('msg-confirm-client').value = cfg.msgConfirmClient;
-    document.getElementById('msg-reminder').value   = cfg.msgReminder;
+    document.getElementById('msg-reminder').value = cfg.msgReminder;
 
     // Add colors section if not exists
     if (!document.getElementById('colors-card')) {
@@ -881,9 +888,9 @@ const Admin = {
   },
 
   _setupDaysCheck() {
-    const cfg   = Store.getConfig();
-    const names = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
-    const wrap  = document.getElementById('days-check');
+    const cfg = Store.getConfig();
+    const names = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'];
+    const wrap = document.getElementById('days-check');
     wrap.innerHTML = names.map((n, i) => `
       <button class="day-btn ${cfg.workDays.includes(i) ? 'active' : ''}" 
         onclick="Admin._toggleDay(${i}, this)">${n}</button>
@@ -908,13 +915,13 @@ const Admin = {
 
   saveHours() {
     const cfg = Store.getConfig();
-    cfg.openTime  = document.getElementById('cfg-open').value;
+    cfg.openTime = document.getElementById('cfg-open').value;
     cfg.closeTime = document.getElementById('cfg-close').value;
-    cfg.interval  = parseInt(document.getElementById('cfg-interval').value) || 30;
+    cfg.interval = parseInt(document.getElementById('cfg-interval').value) || 30;
     // Dias ativos
     const activeDays = [];
     document.querySelectorAll('.day-btn.active').forEach(b => {
-      const idx = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'].indexOf(b.textContent);
+      const idx = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].indexOf(b.textContent);
       if (idx > -1) activeDays.push(idx);
     });
     cfg.workDays = activeDays;
@@ -925,8 +932,8 @@ const Admin = {
   saveMessages() {
     const cfg = Store.getConfig();
     cfg.msgConfirmClient = document.getElementById('msg-confirm-client').value;
-    cfg.msgReminder      = document.getElementById('msg-reminder').value;
-    cfg.barberPhone      = document.getElementById('cfg-barber-phone').value.trim();
+    cfg.msgReminder = document.getElementById('msg-reminder').value;
+    cfg.barberPhone = document.getElementById('cfg-barber-phone').value.trim();
     Store.setConfig(cfg);
     Utils.toast('Mensagens salvas!');
   },
@@ -934,10 +941,104 @@ const Admin = {
   saveDiscount() {
     const cfg = Store.getConfig();
     cfg.discount = parseInt(document.getElementById('cfg-discount').value) || 0;
-    cfg.coupon   = document.getElementById('cfg-coupon').value.trim();
+    cfg.coupon = document.getElementById('cfg-coupon').value.trim();
     Store.setConfig(cfg);
     Utils.toast('Desconto salvo!');
   },
+
+  //exlui agendamento financeiro 
+  deletePayment(id) {
+
+  const cfg = Store.getConfig();
+
+  // cria overlay (fundo escuro)
+  const overlay = document.createElement('div');
+  overlay.style.position = 'fixed';
+  overlay.style.top = '0';
+  overlay.style.left = '0';
+  overlay.style.width = '100%';
+  overlay.style.height = '100%';
+  overlay.style.background = 'rgba(0,0,0,0.6)';
+  overlay.style.display = 'flex';
+  overlay.style.alignItems = 'center';
+  overlay.style.justifyContent = 'center';
+  overlay.style.zIndex = '9999';
+
+  // caixa modal
+  const box = document.createElement('div');
+  box.style.background = '#111';
+  box.style.padding = '20px';
+  box.style.border = '1px solid #333';
+  box.style.borderRadius = '8px';
+  box.style.minWidth = '280px';
+  box.style.display = 'flex';
+  box.style.flexDirection = 'column';
+  box.style.gap = '10px';
+
+  const input = document.createElement('input');
+  input.type = 'password';
+  input.placeholder = 'Digite a senha';
+  input.style.padding = '10px';
+
+  const btnOk = document.createElement('button');
+  btnOk.innerText = 'Confirmar';
+  btnOk.style.backgroundColor = '#035e1c';
+
+  const btnCancel = document.createElement('button');
+  btnCancel.innerText = 'Cancelar';
+  btnCancel.style.backgroundColor = '#751010';
+
+
+  box.appendChild(input);
+  box.appendChild(btnOk);
+  box.appendChild(btnCancel);
+  overlay.appendChild(box);
+  document.body.appendChild(overlay);
+
+  // 🔴 CLICAR FORA CANCELA
+  overlay.addEventListener('click', (e) => {
+    if (e.target === overlay) {
+      document.body.removeChild(overlay);
+    }
+  });
+
+  // botão cancelar
+  btnCancel.onclick = () => {
+    document.body.removeChild(overlay);
+  };
+
+  // botão confirmar
+  btnOk.onclick = () => {
+
+    const senha = input.value;
+
+    if (senha !== cfg.pass) {
+      Utils.toast('Senha incorreta!');
+      document.body.removeChild(overlay);
+      return;
+    }
+
+    if (!confirm('Tem certeza que deseja excluir este pagamento?')) {
+      document.body.removeChild(overlay);
+      return;
+    }
+
+    let bookings = Store.getBookings();
+
+    bookings = bookings.filter(b => b.id !== id);
+
+    Store.setBookings(bookings);
+
+    Utils.toast('Pagamento excluído com sucesso!');
+
+    this.renderFinanceiro();
+
+    if (this._currentTab === 'dashboard') this.renderDashboard();
+    if (this._currentTab === 'agenda') this.renderAgenda();
+
+    document.body.removeChild(overlay);
+  };
+},
 
   updateColor(key, value) {
     document.documentElement.style.setProperty('--' + key, value);
