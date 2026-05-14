@@ -7,7 +7,7 @@
 /* ═══════════════════════════════════════════
    STORE — camada de armazenamento persistente
 ═══════════════════════════════════════════ */
-// senha e nome de usuario 
+// senha e nome de usuario
 
 const Store = {
     _prefix: 'barberpro_',
@@ -23,23 +23,18 @@ const Store = {
 
     // Dados principais
     getBookings() { return this.get('bookings') || []; },
-
     setBookings(v) { this.set('bookings', v); },
 
     getServices() { return this.get('services') || Store._defaultServices(); },
-
     setServices(v) { this.set('services', v); },
 
     getBlocks() { return this.get('blocks') || []; },
-
     setBlocks(v) { this.set('blocks', v); },
 
     getStock() { return this.get('stock') || []; },
-
     setStock(v) { this.set('stock', v); },
 
     getClients() { return this.get('clients') || {}; },
-
     setClients(v) { this.set('clients', v); },
 
     // ✅ CONFIG CORRIGIDA
@@ -62,8 +57,12 @@ const Store = {
         const updatedConfig = {
             ...savedConfig,
 
+            // mantém sempre o usuário/senha do código
             user: defaultConfig.user,
             pass: defaultConfig.pass,
+
+            // mantém sempre a lista do código (pra você editar direto aqui)
+            clientesLiberados: defaultConfig.clientesLiberados,
 
             // 🔥 garante que sessionVersion exista sempre
             sessionVersion: savedConfig.sessionVersion || defaultConfig.sessionVersion,
@@ -93,12 +92,30 @@ const Store = {
     // ════════════════════════════════════════════════════
     _defaultConfig() {
         return {
-            user: 'lucas',         // 👤 USUÁRIO DE LOGIN - EDITAR AQUI
-            pass: 'lucas123',     // 🔒 SENHA DE LOGIN - EDITAR AQUI
+            //controle dos usuarios
+            user: 'kleber',         // 👤 USUÁRIO DE LOGIN - EDITAR AQUI
+            pass: 'kleber',         // 🔒 SENHA DE LOGIN - EDITAR AQUI
 
             // 🔥 se você mudar isso manualmente no código,
             // todo mundo perde acesso automaticamente
             sessionVersion: 1,
+
+            // ✅ CLIENTES LIBERADOS (EDITAR AQUI)
+            clientesLiberados: [
+                {
+                    login: "lucas",
+                    senha: "lucas123",
+                    empresa: "BarberPro Lucas",
+                    validade: "2026-12-31",
+                    status: "ativo" // "ativo" ou "bloqueado"
+                }, {
+                    login: "bruno",
+                    senha: "bruno123",
+                    empresa: "BarberPro Bruno",
+                    validade: "2026-12-31",
+                    status: "ativo" // "ativo" ou "bloqueado"
+                }
+            ],
 
             openTime: '09:00',
             closeTime: '19:00',
@@ -137,6 +154,7 @@ const Store = {
         };
     }
 };
+
 /* ═══════════════════════════════════════════
    UTILS
 ═══════════════════════════════════════════ */
@@ -286,11 +304,20 @@ const App = {
         if (parts.length !== 3) return false;
 
         const hash = parts[2];
-
         const cfg = Store.getConfig();
-        const currentHash = btoa(cfg.pass + '|' + (cfg.sessionVersion || 1));
 
-        return hash === currentHash;
+        // valida contra admin
+        const adminHash = btoa(cfg.pass + '|' + (cfg.sessionVersion || 1));
+        if (hash === adminHash) return true;
+
+        // valida contra clientes liberados
+        const lista = cfg.clientesLiberados || [];
+        for (let c of lista) {
+            const clientHash = btoa(c.senha + '|' + (cfg.sessionVersion || 1));
+            if (hash === clientHash) return true;
+        }
+
+        return false;
     },
 
     // Salva sessão (em sessionStorage, expira ao fechar navegador)
@@ -325,34 +352,66 @@ const App = {
         document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
         document.getElementById(id).classList.add('active');
     },
+
     goHome() { App.showScreen('screen-entry'); },
     showLogin() { App.showScreen('screen-login'); document.getElementById('login-user').focus(); },
     showClientArea() { App.showScreen('screen-client'); Client.init(); },
 
-    // Login admin
+    // ✅ Login admin OU cliente
     doLogin() {
         const u = document.getElementById('login-user').value.trim();
         const p = document.getElementById('login-pass').value;
         const cfg = Store.getConfig();
 
+        // ✅ Primeiro: login do ADMIN principal
         if (u === cfg.user && p === cfg.pass) {
             document.getElementById('login-error').classList.add('hidden');
 
-            // 🔥 token agora usa senha + sessionVersion
             const token = this.generateSessionToken(cfg.pass, cfg.sessionVersion || 1);
             this.saveSession(token);
 
-            console.log('%c✅ LOGIN ADMIN SUCESSO', 'color: #3ECF8E; font-size: 16px; font-weight: bold;');
-            console.log('%c🔐 CREDENCIAIS ATUAIS:', 'color: gold; font-weight: bold;');
-            console.log(`Usuário: ${cfg.user}`);
-            console.log(`Senha: ${cfg.pass}`);
-            console.log('%cAbra a aba Configurações para alterar', 'color: #9A9590; font-style: italic;');
+            console.log('%c✅ LOGIN ADMIN OK', 'color: #3ECF8E; font-size: 16px; font-weight: bold;');
 
             App.showScreen('screen-admin');
             Admin.init();
-        } else {
-            document.getElementById('login-error').classList.remove('hidden');
+            return;
         }
+
+        // ✅ Depois: login dos clientes liberados
+        const lista = cfg.clientesLiberados || [];
+        const cliente = lista.find(c => c.login === u && c.senha === p);
+
+        if (!cliente) {
+            document.getElementById('login-error').classList.remove('hidden');
+            document.getElementById('login-error').textContent = "Usuário ou senha incorretos.";
+            return;
+        }
+
+        if ((cliente.status || "").toLowerCase() !== "ativo") {
+            document.getElementById('login-error').classList.remove('hidden');
+            document.getElementById('login-error').textContent = "Acesso bloqueado. Entre em contato com o administrador.";
+            return;
+        }
+
+        const hoje = Utils.today();
+        if (cliente.validade && cliente.validade < hoje) {
+            document.getElementById('login-error').classList.remove('hidden');
+            document.getElementById('login-error').textContent = "Licença vencida. Entre em contato para renovar.";
+            return;
+        }
+
+        document.getElementById('login-error').classList.add('hidden');
+
+        // ✅ Token agora usa a senha do cliente
+        const token = this.generateSessionToken(cliente.senha, cfg.sessionVersion || 1);
+        this.saveSession(token);
+
+        console.log('%c✅ LOGIN CLIENTE OK', 'color: #3ECF8E; font-size: 16px; font-weight: bold;');
+        console.log('%c🏢 Empresa:', 'color: gold; font-weight: bold;', cliente.empresa);
+        console.log('%c📅 Validade:', 'color: gold; font-weight: bold;', cliente.validade);
+
+        App.showScreen('screen-admin');
+        Admin.init();
     },
 
     logout() {
@@ -566,14 +625,17 @@ const Client = {
         const html = slots.map(t => {
             const isBlockedSlot = Utils.isBlocked(dateStr, t, blocks);
             const isBooked = Utils.isBooked(dateStr, t, bookings);
+
             // Se for hoje, bloquear horários passados
             let isPast = false;
             if (dateStr === todayStr) {
                 const [h, m] = t.split(':').map(Number);
                 isPast = (h * 60 + m) <= (now.getHours() * 60 + now.getMinutes());
             }
+
             const unavailable = isBlockedSlot || isBooked || isPast;
             const selected = this.state.time === t;
+
             return `<div class="time-slot ${unavailable ? 'blocked' : ''} ${selected ? 'selected' : ''}"
         ${!unavailable ? `onclick="Client._selectTime('${t}')"` : ''}>${t}${unavailable ? `<br><small style="font-size:.6rem;opacity:.6">${isBooked ? 'Ocupado' : 'Bloqueado'}</small>` : ''}</div>`;
         }).join('');
@@ -593,13 +655,16 @@ const Client = {
         document.getElementById('time-slots-modal').innerHTML = slots.map(slot => {
             const isBlockedSlot = Utils.isBlocked(this.state.date, slot, blocks);
             const isBooked = Utils.isBooked(this.state.date, slot, bookings);
+
             let isPast = false;
             if (this.state.date === todayStr) {
                 const [h, m] = slot.split(':').map(Number);
                 isPast = (h * 60 + m) <= (now.getHours() * 60 + now.getMinutes());
             }
+
             const unavailable = isBlockedSlot || isBooked || isPast;
             const selected = this.state.time === slot;
+
             return `<div class="time-slot ${unavailable ? 'blocked' : ''} ${selected ? 'selected' : ''}"
         ${!unavailable ? `onclick="Client._selectTime('${slot}')"` : ''}>${slot}</div>`;
         }).join('');
@@ -635,6 +700,7 @@ App.calPrev = function () {
     Modal.close('modal-time-select');
     Client._renderCal();
 };
+
 App.calNext = function () {
     Client.state.calMonth++;
     if (Client.state.calMonth > 11) { Client.state.calMonth = 0; Client.state.calYear++; }
@@ -654,8 +720,6 @@ App.clientNewBooking = () => Client.clientNewBooking();
 
 /* ═══════════════════════════════════════════
    REMINDER SYSTEM — lembretes WhatsApp
-   Verifica a cada minuto se há agendamentos
-   em ~1h e abre prompt para enviar WA.
 ═══════════════════════════════════════════ */
 setInterval(() => {
     const bookings = Store.getBookings();
@@ -680,6 +744,7 @@ setInterval(() => {
         const msg = Utils.fillMsg(cfg.msgReminder, {
             nome: b.name, servico: svc?.name || '', data: Utils.fmtDate(b.date), hora: b.time
         });
+
         // Marca como lembrete enviado
         b.reminderSent = true;
         Store.setBookings(bookings);
@@ -687,7 +752,6 @@ setInterval(() => {
         // Envia lembrete automaticamente via WhatsApp
         window.open(Utils.whatsappUrl(b.phone, msg), '_blank');
 
-        // Notifica barbeiro (opcional)
         if (cfg.barberPhone) {
             const barberMsg = `⏰ Lembrete enviado: ${b.name} tem agendamento às ${b.time} (${svc?.name || 'serviço'}).`;
             console.log(barberMsg);
@@ -697,6 +761,7 @@ setInterval(() => {
 
 // Inicializa ao carregar
 window.addEventListener('DOMContentLoaded', () => {
+
     // Verifica sessão existente
     App.checkSession();
 
