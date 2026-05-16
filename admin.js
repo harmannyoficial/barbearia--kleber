@@ -105,7 +105,10 @@ const Admin = {
      DASHBOARD
   ═══════════════════════════════════════ */
   renderDashboard() {
-    const bookings = Store.getBookings();
+    const loggedLogin = App.getLoggedLogin();
+    const allBookings = Store.getBookings();
+    // Filtra agendamentos do usuário logado (por ownerLogin ou sem ownerLogin para admin principal)
+    const bookings = allBookings.filter(b => (b.ownerLogin || '') === loggedLogin);
     const services = Store.getServices();
     const today = Utils.today();
     const todayB = bookings.filter(b => b.date === today && b.status !== 'cancelled');
@@ -169,8 +172,9 @@ const Admin = {
     const title = `Hoje — ${Utils.fmtDateLong(today)}`;
     document.getElementById('today-title').textContent = title;
 
-    // Renderizar agendamentos do dia atual
-    const bookings = Store.getBookings().filter(b => b.date === today && b.status !== 'cancelled')
+    const loggedLogin = App.getLoggedLogin();
+    // Renderizar agendamentos do dia atual (somente do usuário logado)
+    const bookings = Store.getBookings().filter(b => b.date === today && b.status !== 'cancelled' && (b.ownerLogin || '') === loggedLogin)
       .sort((a, b) => a.time.localeCompare(b.time));
     const html = bookings.length ? bookings.map(b => this._renderAppointmentCard(b, true)).join('') : '<div class="empty-state"><div class="empty-icon">📅</div>Nenhum agendamento hoje.</div>';
     document.getElementById('today-appointments-list').innerHTML = html;
@@ -181,7 +185,8 @@ const Admin = {
   },
 
   showDebts() {
-    const bookings = Store.getBookings().filter(b => b.payment !== 'paid' && b.status === 'confirmed');
+    const loggedLogin = App.getLoggedLogin();
+    const bookings = Store.getBookings().filter(b => b.payment !== 'paid' && b.status === 'confirmed' && (b.ownerLogin || '') === loggedLogin);
     const html = bookings.length ? bookings.map(b => this._renderAppointmentCard(b, true)).join('') : '<div class="empty-state"><div class="empty-icon">💸</div>Nenhum débito pendente.</div>';
     document.getElementById('debts-modal-content').innerHTML = html;
     Modal.open('modal-debts');
@@ -195,7 +200,8 @@ const Admin = {
 
     const cfg = Store.getConfig();
     const blocks = Store.getBlocks();
-    const bookings = Store.getBookings();
+    const loggedLogin = App.getLoggedLogin();
+    const bookings = Store.getBookings().filter(b => (b.ownerLogin || '') === loggedLogin);
     const today = Utils.today();
     const firstDay = new Date(year, month, 1).getDay();
     const daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -230,7 +236,8 @@ const Admin = {
 
   _openDayModal(ds) {
     const title = `Agendamentos — ${Utils.fmtDateLong(ds)}`;
-    const bookings = Store.getBookings().filter(b => b.date === ds && b.status !== 'cancelled')
+    const loggedLogin = App.getLoggedLogin();
+    const bookings = Store.getBookings().filter(b => b.date === ds && b.status !== 'cancelled' && (b.ownerLogin || '') === loggedLogin)
       .sort((a, b) => a.time.localeCompare(b.time));
     const html = bookings.length ? bookings.map(b => this._renderAppointmentCard(b, true)).join('') : '<div class="empty-state"><div class="empty-icon">📅</div>Nenhum agendamento neste dia.</div>';
     document.getElementById('day-modal-title').textContent = title;
@@ -381,7 +388,7 @@ const Admin = {
       if (idx > -1) bookings[idx] = { ...bookings[idx], name, phone, serviceId: svcId, date, time, payment: pay, obs };
     } else {
       // Novo
-      const booking = { id: Utils.uid(), name, phone, serviceId: svcId, date, time, payment: pay, obs, status: 'confirmed', createdAt: new Date().toISOString(), source: 'admin' };
+      const booking = { id: Utils.uid(), name, phone, serviceId: svcId, date, time, payment: pay, obs, status: 'confirmed', createdAt: new Date().toISOString(), source: 'admin', ownerLogin: App.getLoggedLogin() };
       bookings.push(booking);
 
       // Atualiza cliente
@@ -485,8 +492,13 @@ const Admin = {
 
   _renderClientsTable(filter) {
     const clients = Store.getClients();
-    const bookings = Store.getBookings();
-    let rows = Object.values(clients);
+    const loggedLogin = App.getLoggedLogin();
+    const bookings = Store.getBookings().filter(b => (b.ownerLogin || '') === loggedLogin);
+
+    // Monta conjunto de telefones que têm agendamento com este usuário
+    const ownerPhones = new Set(bookings.map(b => b.phone.replace(/\D/g, '')));
+
+    let rows = Object.values(clients).filter(c => ownerPhones.has(c.phone.replace(/\D/g, '')));
     if (filter) rows = rows.filter(c => c.name.toLowerCase().includes(filter) || c.phone.includes(filter));
 
     if (!rows.length) {
@@ -645,7 +657,8 @@ const Admin = {
   ═══════════════════════════════════════ */
   renderFinanceiro() {
     const filter = document.getElementById('fin-filter')?.value || 'month';
-    const bookings = Store.getBookings();
+    const loggedLogin = App.getLoggedLogin();
+    const bookings = Store.getBookings().filter(b => (b.ownerLogin || '') === loggedLogin);
     const services = Store.getServices();
     const today = Utils.today();
     const now = new Date();
@@ -850,6 +863,43 @@ const Admin = {
     document.getElementById('msg-confirm-client').value = cfg.msgConfirmClient;
     document.getElementById('msg-reminder').value = cfg.msgReminder;
 
+    // ── Link exclusivo + WhatsApp individual ──
+    if (!document.getElementById('user-link-card')) {
+      const loggedLogin = App.getLoggedLogin();
+      const baseUrl = window.location.origin + window.location.pathname.replace(/[^/]*$/, '') + 'agendar.html';
+      const exclusiveLink = `${baseUrl}?adm=${loggedLogin}`;
+      const savedPhone = Store.getUserWhatsApp(loggedLogin);
+
+      const linkCardHTML = `
+        <div class="card" id="user-link-card" style="border: 1px solid var(--border-gold);">
+          <div class="card-title">🔗 Seu Link Exclusivo de Agendamento</div>
+          <p style="font-size:.85rem;color:var(--text2);margin-bottom:.75rem;">
+            Envie este link para seus clientes. Os agendamentos feitos por ele serão vinculados apenas a você.
+          </p>
+          <div style="display:flex;gap:.5rem;align-items:center;flex-wrap:wrap;">
+            <input type="text" id="user-exclusive-link" value="${exclusiveLink}" readonly
+              style="flex:1;min-width:0;background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:.6rem .9rem;color:var(--gold);font-size:.85rem;cursor:pointer;"
+              onclick="this.select()">
+            <button class="btn" onclick="Admin.copyExclusiveLink()" style="white-space:nowrap;">📋 Copiar Link</button>
+          </div>
+          <div class="form-group" style="margin-top:1.25rem;">
+            <label>📱 Seu WhatsApp (para receber notificações de novos agendamentos)</label>
+            <div style="display:flex;gap:.5rem;flex-wrap:wrap;">
+              <input type="tel" id="cfg-user-whatsapp" placeholder="(11) 99999-9999"
+                value="${savedPhone}"
+                oninput="Utils.maskPhone(this)"
+                style="flex:1;min-width:0;">
+              <button class="btn" onclick="Admin.saveUserWhatsApp()" style="white-space:nowrap;">💾 Salvar WhatsApp</button>
+            </div>
+            <small style="color:var(--text2);font-size:.78rem;">Quando um cliente agendar pelo seu link, você receberá uma notificação neste número.</small>
+          </div>
+        </div>
+      `;
+      // Insere antes do primeiro card de config
+      const tabConfig = document.getElementById('tab-config');
+      tabConfig.insertAdjacentHTML('afterbegin', linkCardHTML);
+    }
+
     // Add colors section if not exists
     if (!document.getElementById('colors-card')) {
       const colorsHTML = `
@@ -1051,6 +1101,31 @@ const Admin = {
 
       document.body.removeChild(overlay);
     };
+  },
+
+  copyExclusiveLink() {
+    const input = document.getElementById('user-exclusive-link');
+    if (!input) return;
+    input.select();
+    try {
+      navigator.clipboard.writeText(input.value).then(() => {
+        Utils.toast('✅ Link copiado! Envie para seus clientes.');
+      }).catch(() => {
+        document.execCommand('copy');
+        Utils.toast('✅ Link copiado!');
+      });
+    } catch (e) {
+      document.execCommand('copy');
+      Utils.toast('✅ Link copiado!');
+    }
+  },
+
+  saveUserWhatsApp() {
+    const loggedLogin = App.getLoggedLogin();
+    const phone = document.getElementById('cfg-user-whatsapp').value.trim();
+    if (!phone) { Utils.toast('Informe o número de WhatsApp.'); return; }
+    Store.setUserWhatsApp(loggedLogin, phone);
+    Utils.toast('✅ WhatsApp salvo com sucesso!');
   },
 
   updateColor(key, value) {

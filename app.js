@@ -76,6 +76,14 @@ const Store = {
 
     setConfig(v) { this.set('config', v); },
 
+    // WhatsApp individual por usuário (chave: login do usuário)
+    getUserWhatsApp(login) {
+        return this.get('whatsapp_' + login) || '';
+    },
+    setUserWhatsApp(login, phone) {
+        this.set('whatsapp_' + login, phone);
+    },
+
     _defaultServices() {
         return [
             { id: 's1', name: 'Corte Clássico', price: 35, duration: 30, icon: '✂', desc: 'Corte tradicional com acabamento perfeito', active: true },
@@ -114,7 +122,14 @@ const Store = {
                     empresa: "barberpro bruno mauricio",
                     validade: "2026-06-15",
                     status: "ativo" // "ativo" ou "bloqueado"
-                }
+                },
+                 {
+                    login: "ana",
+                    senha: "ana123",
+                    empresa: "BarberPro Ana",
+                    validade: "2026-12-31",
+                    status: "ativo" // "ativo" ou "bloqueado"
+                },
             ],
 
             openTime: '09:00',
@@ -333,6 +348,17 @@ const App = {
     // Remove sessão
     clearSession() {
         sessionStorage.removeItem('barberpro_session');
+        sessionStorage.removeItem('barberpro_logged_login');
+    },
+
+    // Salva o login do usuário logado
+    saveLoggedLogin(login) {
+        sessionStorage.setItem('barberpro_logged_login', login);
+    },
+
+    // Retorna o login do usuário logado
+    getLoggedLogin() {
+        return sessionStorage.getItem('barberpro_logged_login') || '';
     },
 
     // Verifica sessão ao carregar página
@@ -369,6 +395,7 @@ const App = {
 
             const token = this.generateSessionToken(cfg.pass, cfg.sessionVersion || 1);
             this.saveSession(token);
+            this.saveLoggedLogin(cfg.user);
 
             console.log('%c✅ LOGIN ADMIN OK', 'color: #3ECF8E; font-size: 16px; font-weight: bold;');
 
@@ -405,6 +432,7 @@ const App = {
         // ✅ Token agora usa a senha do cliente
         const token = this.generateSessionToken(cliente.senha, cfg.sessionVersion || 1);
         this.saveSession(token);
+        this.saveLoggedLogin(cliente.login);
 
         console.log('%c✅ LOGIN CLIENTE OK', 'color: #3ECF8E; font-size: 16px; font-weight: bold;');
         console.log('%c🏢 Empresa:', 'color: gold; font-weight: bold;', cliente.empresa);
@@ -475,6 +503,11 @@ const Client = {
     // Confirmar agendamento
     clientConfirm() {
         if (!this.state.date || !this.state.time) { Utils.toast('Selecione data e horário.'); return; }
+
+        // Detecta o dono do link pelo parâmetro ?adm= da URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const ownerLogin = urlParams.get('adm') || '';
+
         const bookings = Store.getBookings();
         this.state.serviceIds.forEach(serviceId => {
             const booking = {
@@ -489,6 +522,7 @@ const Client = {
                 obs: '',
                 createdAt: new Date().toISOString(),
                 source: 'client',
+                ownerLogin: ownerLogin, // 🔑 vincula ao dono do link
             };
             bookings.push(booking);
         });
@@ -505,13 +539,26 @@ const Client = {
         this._showStep(4);
         this._showConfirmDetails(this.state.serviceIds, this.state.date, this.state.time);
 
-        // Abre WhatsApp para confirmação
+        // Monta mensagem de confirmação
         const cfg = Store.getConfig();
         const services = this.state.serviceIds.map(id => Store.getServices().find(s => s.id === id)).filter(Boolean);
         const serviceNames = services.map(s => s.name).join(', ');
         const msg = Utils.fillMsg(cfg.msgConfirmClient, {
             nome: this.state.name, servico: serviceNames, data: Utils.fmtDate(this.state.date), hora: this.state.time
         });
+
+        // Envia WA para o DONO do link (barberiro/usuário) se tiver WhatsApp cadastrado
+        if (ownerLogin) {
+            const ownerPhone = Store.getUserWhatsApp(ownerLogin);
+            if (ownerPhone) {
+                const ownerMsg = `📅 Novo agendamento!\n👤 Cliente: ${this.state.name}\n📱 WhatsApp: ${this.state.phone}\n✂ Serviço: ${serviceNames}\n📆 Data: ${Utils.fmtDate(this.state.date)} às ${this.state.time}`;
+                setTimeout(() => {
+                    window.open(Utils.whatsappUrl(ownerPhone, ownerMsg), '_blank');
+                }, 500);
+            }
+        }
+
+        // Abre WhatsApp para confirmação ao cliente
         setTimeout(() => {
             if (confirm(`Abrir WhatsApp para enviar confirmação ao cliente?`)) {
                 window.open(Utils.whatsappUrl(this.state.phone, msg), '_blank');
