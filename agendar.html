@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Agendamento Online — BarberPro</title>
+  <title>Agendamento Online</title>
   <link rel="preconnect" href="https://fonts.googleapis.com"/>
   <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="./style.css"/>
@@ -106,7 +106,7 @@
   <!-- Cabeçalho fixo -->
   <header class="agendar-header">
     <div class="logo-icon">✂</div>
-    <h1 class="logo-text">BarberPro</h1>
+    <h1 class="logo-text" id="agendar-app-name">BarberPro</h1>
     <span class="owner-badge" id="owner-badge" style="display:none;"></span>
   </header>
 
@@ -256,12 +256,16 @@
       return;
     }
 
-    // Mostra badge com nome do profissional
+    // Exibe badge com nome do profissional
+    const cfg2 = Store.getConfig();
+    const appName = cfg2.appName || 'BarberPro';
     const empresa = isAdmin ? cfg.user : (clienteEncontrado.empresa || clienteEncontrado.login);
     ownerBadge.textContent = '✂ ' + empresa;
     ownerBadge.style.display = '';
 
-    // Atualiza título da aba com o nome da empresa
+    // Atualiza nome do app e título da aba
+    const logoEl = document.getElementById('agendar-app-name');
+    if (logoEl) logoEl.textContent = appName;
     document.title = `Agendar — ${empresa}`;
 
     // Exibe área do cliente
